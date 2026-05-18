@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Zomato OLAP Data Warehouse</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; }
+
+        /* KPI Cards Styling */
+        .kpi-container { display: flex; justify-content: space-between; max-width: 1200px; margin: 0 auto 30px auto; gap: 15px; }
+        .kpi-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; flex: 1; text-align: center; border-top: 4px solid #3498db; }
+        .kpi-title { font-size: 14px; color: #7f8c8d; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; }
+        .kpi-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+
+        /* Dashboard & Controls */
+        .controls { max-width: 1200px; margin: 0 auto 20px auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        select { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #bdc3c7; width: 100%; max-width: 300px;}
+
+        .dashboard-container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        canvas { max-height: 500px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>📊 Zomato OLAP & Data Warehouse Dashboard</h1>
+</div>
+
+<div class="kpi-container">
+    <div class="kpi-card">
+        <div class="kpi-title">🛒 Total Restaurants</div>
+        <div class="kpi-value" th:text="${totalRestaurants}">0</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">👥 Total Votes</div>
+        <div class="kpi-value" th:text="${totalVotes}">0</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">💰 Avg Dining Cost</div>
+        <div class="kpi-value">₹<span th:text="${avgCost}">0</span></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">🏆 Most Expensive City</div>
+        <div class="kpi-value" th:text="${bestCity}">N/A</div>
+    </div>
+</div>
+
+<div class="controls">
+    <label for="analysisType"><strong>🧠 Select Analysis: </strong></label>
+    <select id="analysisType" onchange="updateChart()">
+        <option value="city">Cost by City</option>
+        <option value="delivery">Popularity by Online Delivery</option>
+        <option value="cuisine">Average Rating by Cuisine</option>
+    </select>
+</div>
+
+<div style="text-align: center; margin-bottom: 20px;">
+    <span id="olapBadge" style="background-color: #2c3e50; color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+        ⚙️ Active Operation: Loading...
+    </span>
+</div>
+
+<div class="dashboard-container">
+    <canvas id="mainChart"></canvas>
+</div>
+
+<script th:inline="javascript">
+    // Inject Data
+    const cityLabels = /*[[${cityLabels}]]*/ [];
+    const cityCosts = /*[[${cityCosts}]]*/ [];
+    const deliveryLabels = /*[[${deliveryLabels}]]*/ [];
+    const deliveryVotes = /*[[${deliveryVotes}]]*/ [];
+    const cuisineLabels = /*[[${cuisineLabels}]]*/ [];
+    const cuisineRatings = /*[[${cuisineRatings}]]*/ [];
+
+    let currentChart = null; // Store chart instance to destroy it when switching
+
+    function renderChart(type, labels, data, label, bgColor, indexAxis = 'x') {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+
+        // Destroy old chart if it exists (Streamlit does this automatically, we do it manually in JS!)
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        currentChart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: data,
+                    backgroundColor: bgColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: indexAxis
+            }
+        });
+    }
+
+   // Dropdown Event Listener
+        function updateChart() {
+            const selection = document.getElementById("analysisType").value;
+            const badge = document.getElementById("olapBadge"); // Grab the badge
+
+            if (selection === "city") {
+                badge.innerText = "⚙️ Active Operation: SLICE (Viewing 1 Dimension: City)";
+                badge.style.backgroundColor = "#e74c3c"; // Match chart color
+                renderChart('bar', cityLabels, cityCosts, 'Avg Cost (Local Currency)', '#e74c3c');
+
+            } else if (selection === "delivery") {
+                badge.innerText = "⚙️ Active Operation: SLICE & DICE (Filtered by Delivery Status)";
+                badge.style.backgroundColor = "#2ecc71"; // Match chart color
+                renderChart('doughnut', deliveryLabels, deliveryVotes, 'Total Votes', ['#2ecc71', '#3498db']);
+
+            } else if (selection === "cuisine") {
+                badge.innerText = "⚙️ Active Operation: ROLL-UP (Aggregated Average Ratings by Cuisine)";
+                badge.style.backgroundColor = "#f1c40f"; // Match chart color
+                // Text color to dark so it's readable on yellow
+                badge.style.color = "#333";
+                renderChart('bar', cuisineLabels, cuisineRatings, 'Average Rating (Out of 5)', '#f1c40f', 'y');
+            }
+
+            // Reset text color to white for non-yellow badges
+            if (selection !== "cuisine") badge.style.color = "white";
+        }
+
+    // Initialize first chart on load
+    updateChart();
+</script>
+
+</body>
+</html>

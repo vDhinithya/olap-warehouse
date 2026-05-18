@@ -3,6 +3,7 @@ package com.stag.olap.repository;
 import com.stag.olap.entity.Fact;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,4 +28,15 @@ public interface FactRepository extends JpaRepository<Fact, Long> {
 
     @Query("SELECT AVG(f.averageCostForTwo) FROM Fact f")
     Double getAverageCost();
+
+    @Query("SELECT DISTINCT f.city FROM Fact f WHERE f.city IS NOT NULL ORDER BY f.city")
+    List<String> getAllCities();
+
+    // 2. City ke hisaab se Delivery Data
+    @Query("SELECT f.hasOnlineDelivery, SUM(f.votes) FROM Fact f WHERE f.city = :city GROUP BY f.hasOnlineDelivery")
+    List<Object[]> getPopularityByDeliveryStatusForCity(@Param("city") String city);
+
+    // 3. City ke hisaab se Cuisines
+    @Query("SELECT f.cuisines, AVG(f.aggregateRating) FROM Fact f WHERE f.cuisines IS NOT NULL AND f.cuisines != '' AND f.city = :city GROUP BY f.cuisines ORDER BY COUNT(f.id) DESC LIMIT 10")
+    List<Object[]> getAverageRatingByTopCuisinesForCity(@Param("city") String city);
 }

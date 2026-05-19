@@ -32,11 +32,24 @@ public interface FactRepository extends JpaRepository<Fact, Long> {
     @Query("SELECT DISTINCT f.city FROM Fact f WHERE f.city IS NOT NULL ORDER BY f.city")
     List<String> getAllCities();
 
-    // 2. City ke hisaab se Delivery Data
     @Query("SELECT f.hasOnlineDelivery, SUM(f.votes) FROM Fact f WHERE f.city = :city GROUP BY f.hasOnlineDelivery")
     List<Object[]> getPopularityByDeliveryStatusForCity(@Param("city") String city);
 
-    // 3. City ke hisaab se Cuisines
     @Query("SELECT f.cuisines, AVG(f.aggregateRating) FROM Fact f WHERE f.cuisines IS NOT NULL AND f.cuisines != '' AND f.city = :city GROUP BY f.cuisines ORDER BY COUNT(f.id) DESC LIMIT 10")
     List<Object[]> getAverageRatingByTopCuisinesForCity(@Param("city") String city);
+
+    @Query("SELECT COUNT(f) FROM Fact f WHERE f.city = :city")
+    Long getTotalRestaurantsByCity(@Param("city") String city);
+
+    @Query("SELECT SUM(f.votes) FROM Fact f WHERE f.city = :city")
+    Long getTotalVotesByCity(@Param("city") String city);
+
+    @Query("SELECT AVG(f.averageCostForTwo) FROM Fact f WHERE f.city = :city")
+    Double getAverageCostByCityName(@Param("city") String city);
+
+    @Query("SELECT f.restaurantName, AVG(f.averageCostForTwo) FROM Fact f WHERE f.city = :city GROUP BY f.restaurantName ORDER BY AVG(f.averageCostForTwo) DESC LIMIT 15")
+    List<Object[]> getTopExpensiveRestaurantsByCity(@Param("city") String city);
+
+    @Query("SELECT f FROM Fact f WHERE f.city = :city ORDER BY f.aggregateRating DESC LIMIT 15")
+    List<Fact> getRestaurantDetailsByCity(@Param("city") String city);
 }

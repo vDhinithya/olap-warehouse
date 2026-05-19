@@ -24,3 +24,10 @@ A complete end-to-end Data Warehouse and OLAP (Online Analytical Processing) das
     * **Slice & Dice:** Filtering the analytical cube based on specific dimensions (e.g., viewing delivery footprints exclusively for "Indore").
     * **Drill-down:** Dynamically transitioning from high-level geographical cost distribution down to specific restaurant-level metrics.
 
+## 🎥 Project Demonstration
+
+Watch the complete OLAP Cube Slice & Dice operations in action:
+
+<video src="resources/snapshot.mp4" controls="controls" width="100%">
+  Your browser does not support the video tag.
+</video>

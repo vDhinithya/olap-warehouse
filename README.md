@@ -28,6 +28,13 @@ A complete end-to-end Data Warehouse and OLAP (Online Analytical Processing) das
 
 Watch the complete OLAP Cube Slice & Dice operations in action:
 
+
+
+https://github.com/user-attachments/assets/2f7f1649-3f09-4126-961d-7c8789628e72
+
+
+
+
 <video src="src/main/resources/snapshot.mp4" controls="controls" width="100%">
   Your browser does not support the video tag.
 </video>

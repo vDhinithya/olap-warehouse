@@ -52,4 +52,25 @@ public interface FactRepository extends JpaRepository<Fact, Long> {
 
     @Query("SELECT f FROM Fact f WHERE f.city = :city ORDER BY f.aggregateRating DESC LIMIT 15")
     List<Fact> getRestaurantDetailsByCity(@Param("city") String city);
+
+    @Query("SELECT COUNT(DISTINCT f.city) FROM Fact f")
+    Long getTotalCities();
+
+    @Query("SELECT f.cuisines, COUNT(f) FROM Fact f GROUP BY f.cuisines ORDER BY COUNT(f) DESC LIMIT 1")
+    List<Object[]> getMostPopularCuisine();
+
+    @Query("SELECT f.cuisines, COUNT(f) FROM Fact f WHERE f.city = :city GROUP BY f.cuisines ORDER BY COUNT(f) DESC LIMIT 1")
+    List<Object[]> getMostPopularCuisineByCity(@Param("city") String city);
+
+    @Query("SELECT AVG(f.aggregateRating) FROM Fact f WHERE f.aggregateRating > 0")
+    Double getGlobalAverageRating();
+
+    @Query("SELECT AVG(f.aggregateRating) FROM Fact f WHERE f.city = :city AND f.aggregateRating > 0")
+    Double getAverageRatingByCity(@Param("city") String city);
+
+    @Query("SELECT COUNT(f) FROM Fact f WHERE f.hasOnlineDelivery = 'Yes'")
+    Long getOnlineDeliveryCount();
+
+    @Query("SELECT COUNT(f) FROM Fact f WHERE f.city = :city AND f.hasOnlineDelivery = 'Yes'")
+    Long getOnlineDeliveryCountByCity(@Param("city") String city);
 }

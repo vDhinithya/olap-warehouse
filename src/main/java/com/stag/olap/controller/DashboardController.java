@@ -49,6 +49,16 @@ public class DashboardController {
             model.addAttribute("cityRestaurants", cityRestaurants);
 
             chart3Title = "Top Expensive Restaurants in " + selectedCity + " (Drill-Down)";
+
+            model.addAttribute("totalCities", 1); // Kyunki filter lag gaya hai
+
+            List<Object[]> popCuisine = repository.getMostPopularCuisineByCity(selectedCity);
+            model.addAttribute("topCuisine", popCuisine.isEmpty() ? "N/A" : popCuisine.get(0)[0]);
+
+            Double avgRating = repository.getAverageRatingByCity(selectedCity);
+            model.addAttribute("avgRating", avgRating != null ? String.format("%.1f", avgRating) : "0.0");
+
+            model.addAttribute("onlineCount", repository.getOnlineDeliveryCountByCity(selectedCity));
         }
         else {
             model.addAttribute("totalRestaurants", repository.getTotalRestaurants());
@@ -66,6 +76,16 @@ public class DashboardController {
             ratingData = repository.getAverageRatingByTopCuisines();
 
             chart3Title = "Cost Distribution Across Geography (Roll-up)";
+
+            model.addAttribute("totalCities", repository.getTotalCities());
+
+            List<Object[]> popCuisine = repository.getMostPopularCuisine();
+            model.addAttribute("topCuisine", popCuisine.isEmpty() ? "N/A" : popCuisine.get(0)[0]);
+
+            Double avgRating = repository.getGlobalAverageRating();
+            model.addAttribute("avgRating", avgRating != null ? String.format("%.1f", avgRating) : "0.0");
+
+            model.addAttribute("onlineCount", repository.getOnlineDeliveryCount());
         }
 
         // Mapping Data to Lists for Chart.js
